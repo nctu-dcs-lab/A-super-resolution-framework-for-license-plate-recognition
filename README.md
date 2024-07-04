@@ -25,6 +25,10 @@ tensorboard --logdir tb_logger/crnnOCR_continue --port 5500 --bind_all
     * name of testing
     * dataset directory
     * model path (pretrain_network_g)
+* run the command (e.g. below)
+```
+python swinfir/test.py -opt options/test/SwinFIR/SwinFIR_SRx2.yml
+```
 * the output super-resolution images will be saved under ./results
 
 ## OCR recognizers
