@@ -53,7 +53,7 @@ python3 tools/infer_rec.py -c configs/ch_PP-OCRv3_rec.yml
 ### CRNN
 * please clone the project from https://github.com/we0091234/crnn_plate_recognition/tree/master
 * the model is already under ./saved_model
-* please modify demo.py
+* please modify ./demo.py
     * change image_path and output text file path
 * run calculate_acc.py to output .csv file
     * change the input txt path and output filename
