@@ -1,9 +1,10 @@
+#  A super-resolution framework for license plate recognition
 ## Project
 ### Setting up
 * please create a conda environment
 * install the packages according to requirements.txt
 * please clone the project
-### training
+### Training
 * define the .yml file under ./options/train/SwinFIR
     * name of the experiment
     * dataset directory
@@ -14,12 +15,12 @@
 CUDA_VISIBLE_DEVICES=0 python swinfir/train.py -opt options/train/SwinFIR/train_crnn4_Relu_VGG.yml
 ```
 * models and training_states will be saved under ./experiments
-### tensorboard
+### Tensorboard
 * watch the PSNR/SSIM curves and loss value curves during validation
 ```
 tensorboard --logdir tb_logger/crnnOCR_continue --port 5500 --bind_all
 ```
-### testing
+### Testing
 * modify the .yml file ./options/test/SwinFIR/SwinFIR_SRx2.yml
     * name of testing
     * dataset directory
@@ -65,6 +66,6 @@ python3 tools/infer_rec.py -c configs/ch_PP-OCRv3_rec.yml
     * clone the project https://github.com/Valfride/lpr-rsr-ext to train and test on it
 * PKUSR.zip is for training and testing our method
     * data has been split to train/val/test folder
-### others (in google drive)
+### Others (in google drive)
 * FSI-DI-Dataset is the original dataset from the paper https://www.sciencedirect.com/science/article/pii/S2666281720303899
 * FSI-DI : HR-LR paired images which are collected from FSI-DI-Dataset
