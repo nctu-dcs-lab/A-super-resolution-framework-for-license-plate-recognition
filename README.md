@@ -3,7 +3,7 @@
 ### Setting up
 * please create a conda environment
 * install the packages according to requirements.txt
-* please clone the project
+* please clone the project and download the proposed dataset in google drive (HR_782.zip, LR_782.zip)
 ### Training
 * define the .yml file under ./options/train/SwinFIR
     * name of the experiment
