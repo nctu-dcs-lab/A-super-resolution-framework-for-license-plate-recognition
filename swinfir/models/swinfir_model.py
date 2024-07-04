@@ -5,6 +5,11 @@ from basicsr.utils.registry import MODEL_REGISTRY
 from basicsr.models.sr_model import SRModel
 from swinfir.models.model_util import mixup
 
+from collections import OrderedDict
+
+import torch
+import torch.nn as nn
+
 
 @MODEL_REGISTRY.register()
 class SwinFIRModel(SRModel):
@@ -38,3 +43,39 @@ class SwinFIRModel(SRModel):
             self.net_g.train()
 
         self.output = self.output[..., :h * scale, :w * scale]
+
+    def optimize_parameters(self, current_iter):
+        self.optimizer_g.zero_grad()
+        self.output = self.net_g(self.lq)
+
+        # Define gradient clipping value
+        clip_value = 0.5
+
+        l_total = 0
+        loss_dict = OrderedDict()
+        # pixel loss
+        if self.cri_pix:
+            l_pix = self.cri_pix(self.output, self.gt)
+            l_total += l_pix
+            loss_dict['l_pix'] = l_pix
+        # perceptual loss
+        if self.cri_perceptual:
+            l_percep, l_style = self.cri_perceptual(self.output, self.gt)
+            if l_percep is not None:
+                l_total += l_percep
+                loss_dict['l_percep'] = l_percep
+            if l_style is not None:
+                l_total += l_style
+                loss_dict['l_style'] = l_style
+
+        l_total.backward()
+
+        # Clip gradients
+        # nn.utils.clip_grad_norm_(self.net_g.parameters(), clip_value)
+
+        self.optimizer_g.step()
+
+        self.log_dict = self.reduce_loss_dict(loss_dict)
+
+        if self.ema_decay > 0:
+            self.model_ema(decay=self.ema_decay)

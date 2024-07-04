@@ -96,7 +96,7 @@ class StereoSRImageDataset(data.Dataset):
         img_lq = np.concatenate((img_lq_l, img_lq_r), axis=0)
         img_gt = np.concatenate((img_gt_l, img_gt_r), axis=0)
 
-        if self.opt['phase'] is not 'train':
+        if self.opt['phase'] != 'train':
             return {'lq': img_lq, 'gt': img_gt, 'lq_path': lq_path_l, 'gt_path': gt_path_l}
 
         return {'lq': img_lq, 'gt': img_gt, 'lq_path': lq_path_l, 'gt_path': gt_path_l, 'phase': self.opt['phase'],

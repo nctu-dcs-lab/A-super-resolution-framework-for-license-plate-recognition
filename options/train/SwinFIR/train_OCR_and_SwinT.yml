@@ -1,0 +1,144 @@
+# general settings
+name: OCR_and_SwinT
+model_type: SwinFIRModel_2
+scale: 2
+num_gpu: auto
+manual_seed: 0
+
+# dataset and data loader settings
+datasets:
+  train:
+    name: LP_train
+    type: PairedImageDADataset
+    dataroot_gt: ../lpr-rsr-ext/clear_PSrec/HR/train
+    dataroot_lq: ../lpr-rsr-ext/clear_PSrec/LR/train
+    meta_info_file: ../lpr-rsr-ext/clear_PSrec/HR/train_gt.txt
+    io_backend:
+      type: disk
+
+    gt_size: [110,40]
+    use_hflip: true
+    use_rot: true
+    use_mixup: true
+    use_channelshuffle: true
+
+    # data loader
+    use_shuffle: true
+    num_worker_per_gpu: 6
+    batch_size_per_gpu: 4
+    dataset_enlarge_ratio: 1
+    prefetch_mode: ~
+
+  val_1:
+    name: LP_val1
+    type: PairedImageDataset
+    dataroot_gt: ../lpr-rsr-ext/clear_PSrec/HR/val1
+    dataroot_lq: ../lpr-rsr-ext/clear_PSrec/LR/val1
+    io_backend:
+      type: disk
+
+  val_2:
+    name: LP_val2
+    type: PairedImageDataset
+    dataroot_gt: ../lpr-rsr-ext/clear_PSrec/HR/val2
+    dataroot_lq: ../lpr-rsr-ext/clear_PSrec/LR/val2
+    io_backend:
+      type: disk
+
+
+# network structures
+network_g:
+  type: SwinFIR
+  upscale: 2
+  in_chans: 3
+  img_size: [55,20] 
+  window_size: 5 # 12
+  img_range: 1.
+  depths: [6, 6, 6, 6, 6, 6]
+  embed_dim: 180
+  num_heads: [6, 6, 6, 6, 6, 6]
+  mlp_ratio: 2
+  upsampler: 'pixelshuffle'
+  resi_connection: 'SFB'
+
+# path
+path:
+  pretrain_network_g: ~
+  strict_load_g: true
+  resume_state: ~
+
+# training settings
+train:
+  ema_decay: 0.999
+  optim_g:
+    type: Adam
+    lr: !!float 2e-4
+    weight_decay: 0
+    betas: [0.9, 0.99]
+
+  scheduler:
+    type: MultiStepLR
+    milestones: [150000, 200000, 250000, 300000]
+    gamma: 0.5
+
+  total_iter: 400000
+  warmup_iter: -1  # no warm up
+
+  # losses
+  pixel_opt:
+    type: OCR_Extractor_Loss
+    loss_weight: 1
+    # reduction: mean
+
+  perceptual_opt:
+    type: Swin_PLoss
+    layer_weights:
+      # before relu
+      'layers.0.blocks.1': 0.1
+      'layers.1.blocks.1': 0.1
+      'layers.2.blocks.5': 1
+      'layers.3.blocks.1': 1
+    perceptual_weight: !!float 1
+    style_weight: 1
+    range_norm: true
+    criterion: l1
+
+# validation settings
+val:
+  val_freq: !!float 5e3
+  save_img: false
+  pbar: False
+
+  metrics:
+    psnr:
+      type: calculate_psnr
+      crop_border: 2
+      test_y_channel: true
+      better: higher  # the higher, the better. Default: higher
+    ssim:
+      type: calculate_ssim
+      crop_border: 2
+      test_y_channel: true
+      better: higher  # the higher, the better. Default: higher     
+    # niqe: 
+    #   type: calculate_niqe
+    #   crop_border: 2
+    #   better: lower # the lower, the better
+
+# logging settings
+logger:
+  print_freq: 1000
+  save_checkpoint_freq: !!float 5e3
+  use_tb_logger: true
+  wandb:
+    project: ~
+    resume_id: ~
+
+# dist training settings
+dist_params:
+  backend: nccl
+  port: 29500
+
+
+# tensorboard --logdir tb_logger --port 5500 --bind_all
+# tensorboard --logdir tb_logger/OCR_and_Perceptual_loss --port 5500 --bind_all

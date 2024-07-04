@@ -1,5 +1,5 @@
 # general settings
-name: train_SwinFIR_SRx2_from_scratch
+name: OCR_and_Perceptual_loss
 model_type: SwinFIRModel
 scale: 2
 num_gpu: auto
@@ -8,15 +8,15 @@ manual_seed: 0
 # dataset and data loader settings
 datasets:
   train:
-    name: DF2K
+    name: LP_train
     type: PairedImageDADataset
-    dataroot_gt: datasets/DF2K/DF2K_HR_sub
-    dataroot_lq: datasets/DF2K/DF2K_bicx2_sub
-    meta_info_file: swinfir/data/meta_info/meta_info_DF2Ksub_GT.txt
+    dataroot_gt: ../lpr-rsr-ext/clear_PSrec/HR/train
+    dataroot_lq: ../lpr-rsr-ext/clear_PSrec/LR/train
+    meta_info_file: ../lpr-rsr-ext/clear_PSrec/HR/train_gt.txt
     io_backend:
       type: disk
 
-    gt_size: 120
+    gt_size: [110,40]
     use_hflip: true
     use_rot: true
     use_mixup: true
@@ -30,18 +30,18 @@ datasets:
     prefetch_mode: ~
 
   val_1:
-    name: Set5
+    name: LP_val1
     type: PairedImageDataset
-    dataroot_gt: ./datasets/Set5/GTmod2
-    dataroot_lq: ./datasets/Set5/LRbicx2
+    dataroot_gt: ../lpr-rsr-ext/clear_PSrec/HR/val1
+    dataroot_lq: ../lpr-rsr-ext/clear_PSrec/LR/val1
     io_backend:
       type: disk
 
   val_2:
-    name: Set14
+    name: LP_val2
     type: PairedImageDataset
-    dataroot_gt: ./datasets/Set14/GTmod2
-    dataroot_lq: ./datasets/Set14/LRbicx2
+    dataroot_gt: ../lpr-rsr-ext/clear_PSrec/HR/val2
+    dataroot_lq: ../lpr-rsr-ext/clear_PSrec/LR/val2
     io_backend:
       type: disk
 
@@ -51,8 +51,8 @@ network_g:
   type: SwinFIR
   upscale: 2
   in_chans: 3
-  img_size: 60
-  window_size: 12
+  img_size: [55,20] 
+  window_size: 5 # 12
   img_range: 1.
   depths: [6, 6, 6, 6, 6, 6]
   embed_dim: 180
@@ -78,17 +78,33 @@ train:
 
   scheduler:
     type: MultiStepLR
-    milestones: [250000, 400000, 450000, 475000]
+    milestones: [150000, 200000, 250000, 300000]
     gamma: 0.5
 
-  total_iter: 500000
+  total_iter: 400000
   warmup_iter: -1  # no warm up
 
   # losses
   pixel_opt:
-    type: CharbonnierLossColor
-    loss_weight: 1.0
-    reduction: mean
+    type: OCR_Extractor_Loss
+    loss_weight: 1
+    # reduction: mean
+
+  perceptual_opt:
+    type: PerceptualLoss
+    layer_weights:
+      # before relu
+      'conv1_2': 0.1
+      'conv2_2': 0.1
+      'conv3_4': 1
+      'conv4_4': 1
+      'conv5_4': 1
+    vgg_type: vgg19
+    use_input_norm: true
+    perceptual_weight: !!float 1
+    style_weight: 1
+    range_norm: true
+    criterion: l1
 
 # validation settings
 val:
@@ -106,11 +122,15 @@ val:
       type: calculate_ssim
       crop_border: 2
       test_y_channel: true
-      better: higher  # the higher, the better. Default: higher
+      better: higher  # the higher, the better. Default: higher     
+    # niqe: 
+    #   type: calculate_niqe
+    #   crop_border: 2
+    #   better: lower # the lower, the better
 
 # logging settings
 logger:
-  print_freq: 200
+  print_freq: 1000
   save_checkpoint_freq: !!float 5e3
   use_tb_logger: true
   wandb:
@@ -121,3 +141,7 @@ logger:
 dist_params:
   backend: nccl
   port: 29500
+
+
+# tensorboard --logdir tb_logger --port 5500 --bind_all
+# tensorboard --logdir tb_logger/OCR_and_Perceptual_loss --port 5500 --bind_all
