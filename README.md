@@ -1,9 +1,8 @@
 #  A super-resolution framework for license plate recognition
 ## Project
 ### Setting up
-* please create a conda environment
-* install the packages according to requirements.txt
-* please clone the project and download the proposed dataset in google drive (HR_782.zip, LR_782.zip)
+* please set up your environment according to SwinFIR https://github.com/Zdafeng/SwinFIR/tree/main
+* please clone this project and download the proposed dataset in google drive (HR_782.zip, LR_782.zip)
 ### Training
 * define the .yml file under ./options/train/SwinFIR
     * name of the experiment
